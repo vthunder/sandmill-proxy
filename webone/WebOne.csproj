@@ -1,0 +1,301 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>webone</AssemblyName>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<Authors>Alexander Tauenis</Authors>
+		<Version>0.18.1</Version>
+		<VersionSuffix></VersionSuffix> <!--<VersionSuffix>-pre</VersionSuffix>-->
+		<PackageVersion>$(Version)$(VersionSuffix)</PackageVersion>
+		<Company>World</Company>
+		<Product>WebOne HTTP Proxy Server</Product>
+		<Description>HTTP 1.x proxy that makes old web browsers usable again in the Web 2.0 world.</Description>
+		<RepositoryType>GitHub</RepositoryType>
+		<RepositoryUrl>https://github.com/atauenis/webone/</RepositoryUrl>
+		<StartupObject>WebOne.Program</StartupObject>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<Configurations>Debug;Release;ReleaseSC</Configurations>
+		<NoWarn>$(NoWarn);NETSDK1179;NETSDK1182</NoWarn>
+		<!-- https://github.com/dotnet/sdk/issues/24269, https://stackoverflow.com/questions/69773547/visual-studio-2019-not-showing-net-6-framework/ -->
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(RuntimeIdentifier.Contains('linux'))">
+		<PackageArchitecture Condition="$(RuntimeIdentifier)=='linux-x64'">amd64</PackageArchitecture>
+		<PackageArchitecture Condition="$(RuntimeIdentifier)=='linux-arm'">armhf</PackageArchitecture>
+		<PackageArchitecture Condition="$(RuntimeIdentifier)=='linux-armv6'">armhf</PackageArchitecture>
+		<PackageArchitecture Condition="$(RuntimeIdentifier)=='linux-arm64'">arm64</PackageArchitecture>
+		<PackageName>webone.$(PackageVersion).linux-$(PackageArchitecture)</PackageName>
+		<PackageName Condition="$(RuntimeIdentifier)=='linux-armv6'">webone.$(PackageVersion).linux-armv6</PackageName>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(RuntimeIdentifier.Contains('win'))">
+		<PackageName>WebOne.$(PackageVersion).$(RuntimeIdentifier)</PackageName>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(RuntimeIdentifier.Contains('osx'))">
+		<PackageArchitecture Condition="$(RuntimeIdentifier)=='osx-x64'">intel</PackageArchitecture>
+		<PackageArchitecture Condition="$(RuntimeIdentifier)=='osx-arm64'">m</PackageArchitecture>
+		<PackageName>WebOne.$(PackageVersion).mac-$(PackageArchitecture)</PackageName>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(Configuration)!='Debug'">
+		<CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+		<DebugType>None</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(RuntimeIdentifier)!='linux-armv6'">
+		<PublishSingleFile>true</PublishSingleFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(SelfContained)==true">
+		<PublishTrimmed>true</PublishTrimmed>
+		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(Configuration)=='Release' AND !$(RuntimeIdentifier.Contains('linux-arm'))">
+		<SelfContained>False</SelfContained>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(Configuration)=='ReleaseSC' OR ($(Configuration)=='Release' AND $(RuntimeIdentifier.Contains('linux-arm')))">
+		<SelfContained>True</SelfContained>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(RuntimeIdentifier.Contains('win')) AND $(SelfContained)==true">
+		<PackageName>WebOne.$(PackageVersion).$(RuntimeIdentifier).full.self-contained</PackageName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Packaging.Targets" Version="0.1.*" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(SelfContained)==false">
+		<DebDotNetDependencies Remove="@(DebDotNetDependencies)" />
+		<DebDotNetDependencies Include="dotnet-runtime-8.0" />
+		<RpmDotNetDependency Remove="@(RpmDotNetDependency)" />
+		<RpmDotNetDependency Include="dotnet-runtime-8.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<DebDependency Include="imagemagick-7.q16 | imagemagick-6.q16" />
+		<DebRecommends Include="ffmpeg" />
+		<DebRecommends Include="yt-dlp" />
+		<DebRecommends Include="deno | nodejs | quickjs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<RpmDependency Include="ImageMagick" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<RuntimeHostConfigurationOption Include="System.Net.SocketsHttpHandler.Http3Support" Value="true" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(SelfContained)==true">
+		<!--
+		Fix of .NET armhf/arm64 dependency list for Ubuntu 22.04+, Debian 12+.
+		https://github.com/quamotion/dotnet-packaging/issues/222
+		https://github.com/quamotion/dotnet-packaging/issues/241#issuecomment-1650045249
+		https://github.com/atauenis/webone/issues/111
+		-->
+		<DebDotNetDependencies Remove="@(DebDotNetDependencies)" />
+		<DebDotNetDependencies Include="libc6" />
+		<DebDotNetDependencies Include="libgcc1 | libgcc-s1" />
+		<DebDotNetDependencies Include="libgssapi-krb5-2" />
+		<DebDotNetDependencies Include="libstdc++6" />
+		<DebDotNetDependencies Include="zlib1g" />
+		<DebDotNetDependencies Include="libssl3 | libssl1.1 | libssl1.0.2 | libssl1.0.1 | libssl1.0.0 | libssl0.9.8" />
+		<DebDotNetDependencies Include="libicu80 | libicu79 | libicu78 | libicu77 | libicu76 | libicu75 | libicu74 | libicu73 | libicu72 | libicu71 | libicu70 | libicu69 | libicu68 | libicu67 | libicu66 | libicu65 | libicu64 | libicu63 | libicu62 | libicu61 | libicu60 | libicu59 | libicu58 | libicu57 | libicu56 | libicu55 | libicu54 | libicu53 | libicu52" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<PostInstallScript>
+			<![CDATA[
+WOOldConfDir=/etc/WebOne/
+WOOldConfFile=/etc/WebOne/webone.conf
+WONewConfFile=/etc/webone.conf.d/migrated.conf
+if [ -f "$WOOldConfFile" ]
+then
+	echo "$WOOldConfFile -> $WONewConfFile"
+	mv $WOOldConfFile $WONewConfFile
+fi
+
+if [ -d "$WOOldConfDir" ]
+then
+	echo "Consider remove /etc/WebOne/ directory. It is no longer used by WebOne."
+fi
+
+WOLog=/var/log/webone.log
+touch $WOLog
+chmod 666 $WOLog
+
+WOCACert=/etc/webone.conf.d/ssl.crt
+WOCAKey=/etc/webone.conf.d/ssl.key
+
+if [ ! -f "$WOCACert" ]
+then
+	echo "$WOCACert will be populated on first run."
+	touch $WOCACert
+	touch $WOCAKey
+	chmod 666 $WOCACert
+	chmod 666 $WOCAKey
+fi
+
+if [ -f /bin/systemctl ]; then
+	systemctl daemon-reload
+	systemctl enable --now webone
+fi
+			]]>
+		</PostInstallScript>
+		<PreRemoveScript>
+			<![CDATA[
+if [ -f /bin/systemctl ]; then
+	systemctl stop webone
+	systemctl disable webone
+fi
+if [ -f /usr/bin/killall ]; then
+	killall webone || true
+fi
+			]]>
+		</PreRemoveScript>
+		<PostRemoveScript>
+			<![CDATA[
+if [ -f /bin/systemctl ]; then
+	systemctl daemon-reload
+fi
+			]]>
+		</PostRemoveScript>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="EXE\**" />
+		<EmbeddedResource Remove="EXE\**" />
+		<None Remove="docs/**" />
+		<None Remove="EXE/**" />
+		<None Remove="EXE\**" />
+		<None Remove="ImageMagic/**" />
+		<None Remove="Netscape/**" />
+		<None Remove="Screenshots/**" />
+		<None Remove="viewtube/**" />
+		<None Remove="WebFixes/**" />
+		<None Remove="convert.txt" />
+		<None Remove="*.rar" />
+		<None Remove="*.lnk" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Properties\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.7.0" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="html/*.*">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="html/filetypes/*.*">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="LICENSE.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="README.md">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="CONTRIBUTING.md">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="logo.webp">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup Condition="$(RuntimeIdentifier.Contains('linux'))">
+		<Content Include="webone.service" CopyToPublishDirectory="Always" LinuxFileMode="644">
+			<LinuxPath>/etc/systemd/system/webone.service</LinuxPath>
+		</Content>
+		<Content Include="webone.logrotate" CopyToPublishDirectory="Always" LinuxFileMode="644">
+			<LinuxPath>/etc/logrotate.d/webone</LinuxPath>
+		</Content>
+		<Content Include="openssl_webone.cnf" CopyToPublishDirectory="Always" LinuxFileMode="644">
+			<LinuxPath>/etc/webone.conf.d/openssl_webone.cnf</LinuxPath>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="webone.conf" CopyToPublishDirectory="Always" LinuxFileMode="644">
+			<LinuxPath Condition="$(RuntimeIdentifier.Contains('linux'))">/etc/webone.conf</LinuxPath>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+
+		<Content Include="codepage.conf" CopyToPublishDirectory="Always" LinuxFileMode="644">
+			<LinuxPath Condition="$(RuntimeIdentifier.Contains('linux'))">/etc/webone.conf.d/codepage.conf</LinuxPath>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+
+		<Content Include="escargot.conf" CopyToPublishDirectory="Always" LinuxFileMode="644">
+			<LinuxPath Condition="$(RuntimeIdentifier.Contains('linux'))">/etc/webone.conf.d/escargot.conf</LinuxPath>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup Condition="$(RuntimeIdentifier.Contains('win-x86'))">
+		<None Include="Win32-all/convert32.exe">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>convert.exe</Link>
+		</None>
+	</ItemGroup>
+	<ItemGroup Condition="$(RuntimeIdentifier.Contains('win-x64'))">
+		<None Include="Win32-all/convert64.exe">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>convert.exe</Link>
+		</None>
+	</ItemGroup>
+	<ItemGroup Condition="$(RuntimeIdentifier.Contains('win-arm'))">
+		<None Include="Win32-all/convertARM.exe">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>convert.exe</Link>
+		</None>
+	</ItemGroup>
+	<ItemGroup Condition="$(RuntimeIdentifier.Contains('win'))">
+		<None Include="Win32-all/*.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>%(Filename)%(Extension)</Link>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup Condition="$(RuntimeIdentifier.Contains('win')) AND $(SelfContained)==true">
+		<None Include="Win32-full/*.*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>%(Filename)%(Extension)</Link>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup Condition="$(Configuration)=='Debug'">
+		<None Include="Win32-all/convert64.exe">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>convert.exe</Link>
+		</None>
+		<None Include="Win32-all/*.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>%(Filename)%(Extension)</Link>
+		</None>
+		<None Include="Win32-full/*.*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>%(Filename)%(Extension)</Link>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup Condition="$(RuntimeIdentifier.Contains('osx'))">
+		<None Include="macOS-resforks/*.*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Link>__MACOSX/%(Filename)%(Extension)</Link>
+		</None>
+		<None Include="openssl_webone.cnf" CopyToPublishDirectory="Always">
+		</None>
+	</ItemGroup>
+</Project>

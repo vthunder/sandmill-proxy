@@ -1,0 +1,22 @@
+﻿[Unit]
+Description=WebOne HTTP Proxy Server
+Documentation=https://github.com/atauenis/webone/wiki/
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+Environment="HOME=/tmp/"
+Environment="OPENSSL_CONF=/etc/webone.conf.d/openssl_webone.cnf"
+ExecStart=/usr/local/bin/webone --daemon
+ReadWriteDirectories=-/var/log/
+ReadWriteDirectories=-/etc/webone.conf.d/
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+StartLimitInterval=5s
+StartLimitBurst=3
+
+[Install]
+WantedBy=default.target
