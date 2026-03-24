@@ -74,7 +74,7 @@ server {
     proxy_read_timeout {{ $.PROXY_READ_TIMEOUT }};
     proxy_send_timeout {{ $.PROXY_SEND_TIMEOUT }};
     proxy_buffer_size {{ $.PROXY_BUFFER_SIZE }};
-    proxy_buffering {{ $.PROXY_BUFFERING }};
+    proxy_buffering off;
     proxy_buffers {{ $.PROXY_BUFFERS }};
     proxy_busy_buffers_size {{ $.PROXY_BUSY_BUFFERS_SIZE }};
     proxy_set_header Upgrade $http_upgrade;
