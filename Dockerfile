@@ -15,4 +15,4 @@ COPY webone-retro.conf /etc/webone.conf
 
 EXPOSE 8080
 
-CMD ["/usr/local/bin/webone-app/webone"]
+CMD ["/usr/local/bin/webone-app/webone", "-config", "/etc/webone.conf"]
