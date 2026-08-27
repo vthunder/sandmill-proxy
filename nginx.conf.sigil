@@ -19,11 +19,16 @@ server {
   lingering_timeout {{ $.LINGERING_TIMEOUT }};
   send_timeout {{ $.SEND_TIMEOUT }};
 
-{{ if (and (eq $listen_port "80") ($.SSL_INUSE)) }}
+{{ if eq $listen_port "80" }}
+  {{/* Unconditional: letsencrypt's ACME challenge location arrives via this
+       include, and gating it on SSL_INUSE means the first cert can never be
+       issued (challenge 404s until a cert exists). */}}
   include {{ $.DOKKU_ROOT }}/{{ $.APP }}/nginx.conf.d/*.conf;
+{{ if $.SSL_INUSE }}
   location / {
     return 301 https://$host:{{ $.PROXY_SSL_PORT }}$request_uri;
   }
+{{ end }}
 {{ end }}
 }
 
